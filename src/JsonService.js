@@ -8,23 +8,28 @@ export default class JsonService {
     constructor(XMLHttpRequestCtor = Global.XMLHttpRequest) {
         this._XMLHttpRequest = XMLHttpRequestCtor;
     }
-    
+
     getJson(url, token) {
         Log.info("JsonService.getJson", url);
-        
-        if (!url){
+
+        if (!url) {
             Log.error("No url passed");
             throw new Error("url");
         }
-        
+
         return new Promise((resolve, reject) => {
-            
+
+            if (url.indexOf('userinfo') > -1) {
+                Log.info("token passed, setting Authorization header");
+                url = url + "?access_token=" + token;
+            }
+
             var req = new this._XMLHttpRequest();
             req.open('GET', url);
 
-            req.onload = function() {
+            req.onload = function () {
                 Log.info("HTTP response received, status", req.status);
-                
+
                 if (req.status === 200) {
                     resolve(JSON.parse(req.responseText));
                 }
@@ -33,12 +38,12 @@ export default class JsonService {
                 }
             };
 
-            req.onerror = function() {
+            req.onerror = function () {
                 Log.error("network error");
                 reject(Error("Network Error"));
             };
-            
-            if (token) {
+
+            if (token && url.indexOf('userinfo') === -1) {
                 Log.info("token passed, setting Authorization header");
                 req.setRequestHeader("Authorization", "Bearer " + token);
             }
